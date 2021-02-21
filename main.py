@@ -7,7 +7,6 @@ import os
 import time
 from moviepy.editor import *
 
-
 bot = telebot.TeleBot(settings.TOKEN)
 
 ONE_MINUTE = 60
@@ -93,98 +92,101 @@ def send_text(message):
         url = message.text
         video = pafy.new(url)
         max_video_length = video.length
+
+
+        if max_video_length <= end_part4:
+
+            bot.send_message(message.chat.id, "Пожалуйста ожидайте. "
+                                              "\nЕсли видео большое, то на его обработку может уйти много времени")
+
+            try:  # Скачиваем видео
+                streams = video.streams
+                for stream in streams:
+                    print(stream.resolution, stream.extension)
+                    if stream.resolution[-3:] == '360':
+                        stream.download()
+                    #  elif stream.resolution[-3:] == '360':
+                    #  stream.download()
+            except:
+                bot.send_message(message.chat.id, "Не удалось скачать, минимальное качество видео должно быть 360")
+
+            wait()
+
+            try:  # Переименовываем файл, чтобы дальше с ним удобно работать
+                rename_files()
+            except:
+                bot.send_message(message.chat.id, "Не удалось переименовать файл")
+
+            wait()
+
+            try:  # Конвертируем в mp3
+                mp4_to_mp3_conversion()
+            except:
+                bot.send_message(message.chat.id, "Не удалось конвертировать в mp3")
+
+            wait()
+
+            try:  # Разделяем большой mp3 файл на части и отправляем пользователю
+                parts_count = get_parts_count(max_video_length)
+                if parts_count == 1:
+                    audio = open('podcast.mp3', 'rb')
+                    bot.send_audio(message.chat.id, audio, timeout=60)
+                    audio.close()
+                elif parts_count == 2:
+                    split_mp3(start_part1, end_part1, 1)
+                    audio = open('part1_podcast.mp3', 'rb')
+                    bot.send_audio(message.chat.id, audio, timeout=60)
+                    wait()
+                    audio.close()
+                    split_mp3(end_part1, max_video_length, 2)
+                    audio = open('part2_podcast.mp3', 'rb')
+                    bot.send_audio(message.chat.id, audio, timeout=60)
+                    audio.close()
+                elif parts_count == 3:
+                    split_mp3(start_part1, end_part1, 1)
+                    split_mp3(end_part1, end_part2, 2)
+                    split_mp3(end_part2, end_part3, 3)
+                    audio = open('part1_podcast.mp3', 'rb')
+                    bot.send_audio(message.chat.id, audio, timeout=60)
+                    audio.close()
+                    audio = open('part2_podcast.mp3', 'rb')
+                    bot.send_audio(message.chat.id, audio, timeout=60)
+                    audio.close()
+                    audio = open('part3_podcast.mp3', 'rb')
+                    bot.send_audio(message.chat.id, audio, timeout=60)
+                    audio.close()
+                elif parts_count == 4:
+                    split_mp3(start_part1, end_part1, 1)
+                    split_mp3(end_part1, end_part2, 2)
+                    split_mp3(end_part2, end_part3, 3)
+                    split_mp3(end_part3, end_part4, 4)
+                    audio = open('part1_podcast.mp3', 'rb')
+                    bot.send_audio(message.chat.id, audio, timeout=60)
+                    audio.close()
+                    audio = open('part2_podcast.mp3', 'rb')
+                    bot.send_audio(message.chat.id, audio, timeout=60)
+                    audio.close()
+                    audio = open('part3_podcast.mp3', 'rb')
+                    bot.send_audio(message.chat.id, audio, timeout=60)
+                    audio.close()
+                    audio = open('part4_podcast.mp3', 'rb')
+                    bot.send_audio(message.chat.id, audio, timeout=60)
+                    audio.close()
+                elif parts_count == 0:
+                    bot.send_message(message.chat.id, "Максимальная длина видео 2 часа 40 минут")
+
+                print("Дошел до конца!")
+
+            except:
+                bot.send_message(message.chat.id, "Не удалось порезать на части и отправить")
+
+            delete_old_files()
+
+        else:
+            bot.send_message(message.chat.id, "Видео слишком большое. Максимум 2 часа 40 минут")
+
     except:
         bot.send_message(message.chat.id, "Некорректная ссылка")
-
-    if max_video_length <= end_part4:
-
-        bot.send_message("Пожалуйста ожидайте. \nЕсли видео большое, то на его обработку может уйти много времени")
-
-        try:  # Скачиваем видео
-            streams = video.streams
-            for stream in streams:
-                print(stream.resolution, stream.extension)
-                if stream.resolution[-3:] == '360':
-                    stream.download()
-                #  elif stream.resolution[-3:] == '360':
-                #  stream.download()
-        except:
-            bot.send_message(message.chat.id, "Не удалось скачать, минимальное качество видео должно быть 360")
-
-        wait()
-
-        try:  # Переименовываем файл, чтобы дальше с ним удобно работать
-            rename_files()
-        except:
-            bot.send_message(message.chat.id, "Не удалось переименовать файл")
-
-        wait()
-
-        try:  # Конвертируем в mp3
-            mp4_to_mp3_conversion()
-        except:
-            bot.send_message(message.chat.id, "Не удалось конвертировать в mp3")
-
-        wait()
-
-        try:  # Разделяем большой mp3 файл на части и отправляем пользователю
-            parts_count = get_parts_count(max_video_length)
-            if parts_count == 1:
-                audio = open('podcast.mp3', 'rb')
-                bot.send_audio(message.chat.id, audio, timeout=60)
-                audio.close()
-            elif parts_count == 2:
-                split_mp3(start_part1, end_part1, 1)
-                audio = open('part1_podcast.mp3', 'rb')
-                bot.send_audio(message.chat.id, audio, timeout=60)
-                wait()
-                audio.close()
-                split_mp3(end_part1, max_video_length, 2)
-                audio = open('part2_podcast.mp3', 'rb')
-                bot.send_audio(message.chat.id, audio, timeout=60)
-                audio.close()
-            elif parts_count == 3:
-                split_mp3(start_part1, end_part1, 1)
-                split_mp3(end_part1, end_part2, 2)
-                split_mp3(end_part2, end_part3, 3)
-                audio = open('part1_podcast.mp3', 'rb')
-                bot.send_audio(message.chat.id, audio, timeout=60)
-                audio.close()
-                audio = open('part2_podcast.mp3', 'rb')
-                bot.send_audio(message.chat.id, audio, timeout=60)
-                audio.close()
-                audio = open('part3_podcast.mp3', 'rb')
-                bot.send_audio(message.chat.id, audio, timeout=60)
-                audio.close()
-            elif parts_count == 4:
-                split_mp3(start_part1, end_part1, 1)
-                split_mp3(end_part1, end_part2, 2)
-                split_mp3(end_part2, end_part3, 3)
-                split_mp3(end_part3, end_part4, 4)
-                audio = open('part1_podcast.mp3', 'rb')
-                bot.send_audio(message.chat.id, audio, timeout=60)
-                audio.close()
-                audio = open('part2_podcast.mp3', 'rb')
-                bot.send_audio(message.chat.id, audio, timeout=60)
-                audio.close()
-                audio = open('part3_podcast.mp3', 'rb')
-                bot.send_audio(message.chat.id, audio, timeout=60)
-                audio.close()
-                audio = open('part4_podcast.mp3', 'rb')
-                bot.send_audio(message.chat.id, audio, timeout=60)
-                audio.close()
-            elif parts_count == 0:
-                bot.send_message(message.chat.id, "Максимальная длина видео 2 часа 40 минут")
-
-            print("Дошел до конца!")
-
-        except:
-            bot.send_message(message.chat.id, "Не удалось порезать на части и отправить")
-
-        delete_old_files()
-
-    else:
-        bot.send_message(message.chat.id, "Видео слишком большое. Максимум 2 часа 40 минут")
 
 
 bot.polling()
