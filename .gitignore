@@ -1,0 +1,11 @@
+.idea
+venv
+__pycache__
+files
+podcast.mp3
+podcast.mp4
+part1_podcast.mp3
+test.py
+send_test.py
+part2_podcast.mp3
+part3_podcast.mp3
