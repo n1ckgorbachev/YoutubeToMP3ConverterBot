@@ -99,6 +99,8 @@ def send_text(message):
         title = title.replace(':', '_')
         title = title.replace('?', '_')
         title = title.replace('/', '_')
+        title = title.replace('*', '_')
+        title = title.replace('\\', '_')
 
         if max_video_length <= end_part4:
 
