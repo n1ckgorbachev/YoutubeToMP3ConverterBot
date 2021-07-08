@@ -1,1 +1,1 @@
-[Link to bot - ] (t.me/@YoutubeToMp3ConverterBot)
+[Link to bot - ] (http://t.me/@YoutubeToMp3ConverterBot)
